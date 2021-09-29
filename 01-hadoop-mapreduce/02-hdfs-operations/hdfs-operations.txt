@@ -1,0 +1,30 @@
+# miscellaneous
+1. docker cp <filename> namenode:/
+2. docker exec -it namenode /bin/bash
+   hdfs dfs -put <filename> /
+
+# -mkdir, -touchz
+1. hdfs dfs -mkdir /folder
+2. hdfs dfs -mkdir /folder/subfolder
+3. hdfs dfs -rm -skipTrash <filename>
+4. hdfs dfs -touchz /folder/subfolder/test
+5. hdfs dfs -rm -skipTrash /folder/subfolder/test
+   # Trash is a directory where deleted files are placed on removal
+   # if -skipTrash flag is not specified. Trash directory
+   # allows to restore deleted files, and is cleaned
+   # after user-configurable period of time.
+6. hdfs dfs -rm -r -skipTrash /folder
+
+# -put, -cat, -tail, -cp
+1. echo "Hello, HDFS!" > test
+   hdfs dfs -put test /
+2. hdfs dfs -cat /test
+3. hdfs dfs -tail /test
+4. hdfs dfs -head /test
+5. hdfs dfs -mkdir /folder && hdfs dfs -cp /test /folder/
+
+# -setrep -w, fsck
+2. hdfs dfs -setrep -w 1 /test  # is slower: the waiting time may be long for DECREASING the number of replications
+   hdfs dfs -setrep -w 3 /test  # is faster
+3. hdfs fsck /test -files -blocks -locations
+4. hdfs fsck -blockId blk_1073741826
