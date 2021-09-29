@@ -1,0 +1,7 @@
+# mean
+hdfs dfs -rm -r /output && hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -files mapper_mean.py,reducer_mean.py -mapper "./mapper_mean.py" -reducer "./reducer_mean.py" -input /AB_NYC_2019.csv -output /output
+hdfs dfs -cat /output/part-00000
+
+# variance
+hdfs dfs -rm -r /output && hadoop jar /opt/hadoop-3.2.1/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -files mapper_variance.py,reducer_variance.py -mapper "./mapper_variance.py" -reducer "./reducer_variance.py" -input /AB_NYC_2019.csv -output /output
+hdfs dfs -cat /output/part-00000

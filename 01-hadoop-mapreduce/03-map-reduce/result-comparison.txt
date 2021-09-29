@@ -1,0 +1,4 @@
+pure_python_mean	152.7206871868289
+map_reduce_mean		152.72068718682894
+pure_python_variance	57674.025246960984
+map_reduce_variance	57675.206594263975
