@@ -5,44 +5,53 @@
 - [X] 2. Подключиться к развёрнутому Hive с помощью любого инструмента: Hue, Python Driver, Zeppelin, любая IDE итд (15 баллов за любой инструмент, максимум 30 баллов).
 
 - [X] 3. Сделать скриншоты поднятого Hive и подключений в выбранными вами инструментах, добавить в репозиторий.
-
+  - подкючение через Beeline:
+  ![](connection-jdbc.PNG)
+  - подкючение через Hue:
+  ![](connection-hue.PNG)
 
 ## Блок 2. Работа с Hive
 
 - [X] 1. Сделать таблицу artists в Hive и вставить туда значения, используя датасет https://www.kaggle.com/pieca111/music-artists-popularity (15 баллов).
 
-Загрузить файл через Hue не получилось в связи с непонятной ошибкой:
+  Загрузить файл через Hue не получилось в связи с непонятной ошибкой:
+  ![](hue-upload-error.PNG)
 
-Загрузка через терминал производилась следующим образом:
-```bash
-docker cp artists.csv docker-hadoop-hive-parquet_hive-server_1:/opt
-docker-compose exec hive-server bash
+  Загрузка через терминал производилась следующим образом:
+  ```bash
+  docker cp artists.csv docker-hadoop-hive-parquet_hive-server_1:/opt
+  docker-compose exec hive-server bash
 
-/opt/hive/bin/beeline -u jdbc:hive2://localhost:10000
+  /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000
 
-CREATE TABLE artists (mbid STRING, artist_mb STRING, artist_lastfm STRING, country_mb STRING, country_lastfm STRING, tags_mb STRING, tags_lastfm STRING, listeners_lastfm INT, scrobbles_lastfm INT, ambiguous_artist BOOLEAN) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' TBLPROPERTIES("skip.header.line.count"="1");
+  CREATE TABLE artists (mbid STRING, artist_mb STRING, artist_lastfm STRING, country_mb STRING, country_lastfm STRING, tags_mb STRING, tags_lastfm STRING, listeners_lastfm INT, scrobbles_lastfm INT, ambiguous_artist BOOLEAN) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' TBLPROPERTIES("skip.header.line.count"="1");
 
-LOAD DATA LOCAL INPATH '/opt/artists.csv' OVERWRITE INTO TABLE artists;
-```
+  LOAD DATA LOCAL INPATH '/opt/artists.csv' OVERWRITE INTO TABLE artists;
+  ```
+  ![](hue-artists.PNG)
 
 - [X] 2. Используя Hive, найти следующее (команды и результаты записать в файл и добавить в репозиторий):
   - [X] a) исполнителя с максимальным числом скробблов (5 баллов):
-```sql
-SELECT artist_lastfm FROM (SELECT * FROM artists ORDER BY scrobbles_lastfm DESC LIMIT 1) x;
-```
+  ```sql
+  SELECT artist_lastfm FROM (SELECT * FROM artists ORDER BY scrobbles_lastfm DESC LIMIT 1) x;
+  ```
+  ![](query-max-scrobbles.PNG)
   - [X] b) самый популярный тэг на ластфм (10 баллов):
-```sql
-SELECT tags_lastfm FROM (SELECT * FROM artists ORDER BY listeners_lastfm DESC LIMIT 1) x;
-```
+  ```sql
+  SELECT tags_lastfm FROM (SELECT * FROM artists ORDER BY listeners_lastfm DESC LIMIT 1) x;
+  ```
+  ![](query-most-popular-tag.PNG)
   - [X] c) самые популярные исполнители 10 самых популярных тегов ластфм (10 баллов):
-```sql
-SELECT DISTINCT artist_lastfm FROM (SELECT * FROM artists ORDER BY listeners_lastfm DESC LIMIT 10) x;
-```
+  ```sql
+  SELECT DISTINCT artist_lastfm FROM (SELECT * FROM artists ORDER BY listeners_lastfm DESC LIMIT 10) x;
+  ```
+  ![](query-artists-of-10-most-popular-tags.PNG)
   - [X] d) распределение стран ста самых популярных исполнителей (10 баллов):
-```sql
-SELECT country_lastfm, COUNT(country_lastfm) AS country_cnt FROM (
-  SELECT * FROM artists WHERE country_lastfm IS NOT NULL ORDER BY listeners_lastfm DESC LIMIT 100
-) x
-GROUP BY country_lastfm
-ORDER BY country_cnt DESC;
-```
+  ```sql
+  SELECT country_lastfm, COUNT(country_lastfm) AS country_cnt FROM (
+    SELECT * FROM artists WHERE country_lastfm IS NOT NULL ORDER BY listeners_lastfm DESC LIMIT 100
+  ) x
+  GROUP BY country_lastfm
+  ORDER BY country_cnt DESC;
+  ```
+  ![](query-top-100-artists-countries-distribution.PNG)
