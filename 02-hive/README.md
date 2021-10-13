@@ -33,22 +33,33 @@
 - [X] 2. Используя Hive, найти следующее (команды и результаты записать в файл и добавить в репозиторий):
   - [X] a) исполнителя с максимальным числом скробблов (5 баллов):
   ```sql
-  SELECT artist_lastfm FROM (SELECT * FROM artists ORDER BY scrobbles_lastfm DESC LIMIT 1) x;
+  WITH
+  top_artist_scrobbles AS (
+    SELECT artist_lastfm, scrobbles_lastfm
+    FROM artists
+    ORDER BY scrobbles_lastfm DESC
+    LIMIT 1
+  )
+  SELECT artist_lastfm FROM top_artist_scrobbles;
   ```
   ![](query-max-scrobbles.PNG)
   - [X] b) самый популярный тег на ластфм (10 баллов). Самый популярный там пустой тег, но на него смотреть неинтересно (и невозможно), поэтому:
   ```sql
-  SELECT tag FROM (
+  WITH
+  tags AS (
+    SELECT trim(raw_tag) as tag
+    FROM artists
+    LATERAL VIEW explode(split(tags_lastfm, ';')) tagTable AS raw_tag
+  ),
+  top_tags AS (
     SELECT tag, COUNT(tag) as tag_cnt
-    FROM (
-      SELECT trim(raw_tag) as tag FROM artists
-      LATERAL VIEW explode(split(tags_lastfm, ';')) tagTable AS raw_tag
-    ) x
-    WHERE tag != ""
+    FROM tags
+    WHERE tag != ''
     GROUP BY tag
     ORDER BY tag_cnt DESC
     LIMIT 1
-  ) y;
+  )
+  SELECT tag FROM top_tags;
   ```
   ![](query-most-popular-tag.PNG)
   - [X] c) самые популярные исполнители 10 самых популярных тегов ластфм (10 баллов):
