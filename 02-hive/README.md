@@ -36,21 +36,58 @@
   SELECT artist_lastfm FROM (SELECT * FROM artists ORDER BY scrobbles_lastfm DESC LIMIT 1) x;
   ```
   ![](query-max-scrobbles.PNG)
-  - [X] b) самый популярный тэг на ластфм (10 баллов):
+  - [X] b) самый популярный тег на ластфм (10 баллов). Самый популярный там пустой тег, но на него смотреть неинтересно (и невозможно), поэтому:
   ```sql
-  SELECT tags_lastfm FROM (SELECT * FROM artists ORDER BY listeners_lastfm DESC LIMIT 1) x;
+  SELECT tag FROM (
+    SELECT tag, COUNT(tag) as tag_cnt
+    FROM (
+      SELECT trim(raw_tag) as tag FROM artists
+      LATERAL VIEW explode(split(tags_lastfm, ';')) tagTable AS raw_tag
+    ) x
+    WHERE tag != ""
+    GROUP BY tag
+    ORDER BY tag_cnt DESC
+    LIMIT 1
+  ) y;
   ```
   ![](query-most-popular-tag.PNG)
   - [X] c) самые популярные исполнители 10 самых популярных тегов ластфм (10 баллов):
   ```sql
-  SELECT DISTINCT artist_lastfm FROM (SELECT * FROM artists ORDER BY listeners_lastfm DESC LIMIT 10) x;
+  WITH
+  artist_listeners_tag AS (
+    SELECT artist_lastfm, listeners_lastfm, trim(raw_tag) as tag
+    FROM artists
+    LATERAL VIEW explode(split(tags_lastfm, ';')) tagTable AS raw_tag
+  ),
+  top_tags AS (
+    SELECT tag, COUNT(tag) as tag_cnt
+    FROM artist_listeners_tag
+    WHERE tag != ''
+    GROUP BY tag
+    ORDER BY tag_cnt DESC
+    LIMIT 10
+  ),
+  filtered AS (
+    SELECT artist_lastfm, listeners_lastfm
+    FROM artist_listeners_tag
+    WHERE tag IN (SELECT tag FROM top_tags)
+    ORDER BY listeners_lastfm DESC
+    LIMIT 10
+  )
+  SELECT DISTINCT artist_lastfm FROM filtered;
   ```
   ![](query-artists-of-10-most-popular-tags.PNG)
   - [X] d) распределение стран ста самых популярных исполнителей (10 баллов):
   ```sql
-  SELECT country_lastfm, COUNT(country_lastfm) AS country_cnt FROM (
-    SELECT * FROM artists WHERE country_lastfm IS NOT NULL ORDER BY listeners_lastfm DESC LIMIT 100
-  ) x
+  WITH
+  top_artists AS (
+    SELECT * FROM artists
+    WHERE country_lastfm != ''
+    ORDER BY listeners_lastfm DESC
+    LIMIT 100
+  )
+  SELECT country_lastfm, COUNT(country_lastfm) AS country_cnt
+  FROM top_artists
   GROUP BY country_lastfm
   ORDER BY country_cnt DESC;
   ```
