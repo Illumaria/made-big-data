@@ -1,0 +1,9 @@
+2021-10-25 12:55:40 INFO Train data path: src\main\resources\train.csv
+2021-10-25 12:55:40 INFO Test data path: src\main\resources\test.csv
+2021-10-25 12:55:40 INFO Output path: src\main\resources\test_predictions.csv
+2021-10-25 12:55:41 INFO Fold 0, MAE-score: 0.05826583705132564
+2021-10-25 12:55:41 INFO Fold 1, MAE-score: 0.04885200787435913
+2021-10-25 12:55:41 INFO Fold 2, MAE-score: 0.04849583358153776
+2021-10-25 12:55:41 INFO Fold 3, MAE-score: 0.04584495062624742
+2021-10-25 12:55:41 INFO Fold 4, MAE-score: 0.05710459229774992
+2021-10-25 12:55:41 INFO Predictions saved to src\main\resources\test_predictions.csv
