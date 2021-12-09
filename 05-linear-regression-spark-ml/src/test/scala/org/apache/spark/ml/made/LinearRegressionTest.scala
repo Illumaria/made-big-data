@@ -14,14 +14,13 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
   val weights: DenseVector[Double] = LinearRegressionTest._weights
   val bias: Double = LinearRegressionTest._bias
   val y_true: DenseVector[Double] = LinearRegressionTest._y
-
   val df: DataFrame = LinearRegressionTest._df
 
   private def validateModel(data: DataFrame): Unit = {
     val y_pred = data.collect().map(_.getAs[Double](1))
 
-    y_pred.length should be (10000)
-    for (i <- 0 until y_pred.length - 1) {
+    y_pred.length should be (100000)
+    for (i <- y_pred.indices) {
       y_pred(i) should be (y_true(i) +- delta)
     }
   }
@@ -55,7 +54,6 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
       .setLabelCol("label")
       .setPredictionCol("prediction")
 
-    // validateModel(model, model.transform(df))
     validateModel(model.transform(df))
   }
 
@@ -104,11 +102,10 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
 }
 
 object LinearRegressionTest extends WithSpark {
-  lazy val _X: DenseMatrix[Double] = DenseMatrix.rand[Double](10000, 3)
+  lazy val _X: DenseMatrix[Double] = DenseMatrix.rand[Double](100000, 3)
   lazy val _weights: DenseVector[Double] = DenseVector(1.5, 0.3, -0.7)
   lazy val _bias: Double = 1.0
-  lazy val _y: DenseVector[Double] = _X * _weights + _bias + DenseVector.rand(10000) * 0.0001
-
+  lazy val _y: DenseVector[Double] = _X * _weights + _bias + DenseVector.rand(100000) * 0.0001
   lazy val _df: DataFrame = createDataFrame(_X, _y)
 
   def createDataFrame(X: DenseMatrix[Double], y: DenseVector[Double]): DataFrame = {

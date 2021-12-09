@@ -49,21 +49,21 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
   override def fit(dataset: Dataset[_]): LinearRegressionModel = {
     implicit val encoder: Encoder[Vector] = ExpressionEncoder()
 
-    val featuresExt = dataset.withColumn("ones", lit(1))
-    val assembler = new VectorAssembler()
+    val datasetExt: Dataset[_] = dataset.withColumn("ones", lit(1))
+    val assembler: VectorAssembler = new VectorAssembler()
       .setInputCols(Array($(featuresCol), "ones", $(labelCol)))
       .setOutputCol("features_ext")
 
-    val assembledFeatures: Dataset[Vector] = assembler
-      .transform(featuresExt)
+    val vectors: Dataset[Vector] = assembler
+      .transform(datasetExt)
       .select("features_ext")
       .as[Vector]
 
     val numFeatures: Int = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
     var weights: BreezeDenseVector[Double] = BreezeDenseVector.rand[Double](numFeatures + 1)
 
-    for (_ <- 0 to $(maxIter)) {
-      val summary = assembledFeatures.rdd.mapPartitions((data: Iterator[Vector]) => {
+    for (_ <- 0 until $(maxIter)) {
+      val summary = vectors.rdd.mapPartitions((data: Iterator[Vector]) => {
         val summarizer = new MultivariateOnlineSummarizer()
         data.foreach(v => {
           val X = v.asBreeze(0 until weights.size).toDenseVector
@@ -116,10 +116,9 @@ class LinearRegressionModel private[made](override val uid: String, val weights:
     override protected def saveImpl(path: String): Unit = {
       super.saveImpl(path)
 
-      // val parameters = Tuple1(weights.asInstanceOf[Vector])
-      val parameters: (Vector, Vector) = weights.asInstanceOf[Vector] -> Vectors.fromBreeze(BreezeDenseVector(bias))
+      val vectors: (Vector, Vector) = weights.asInstanceOf[Vector] -> Vectors.fromBreeze(BreezeDenseVector(bias))
 
-      sqlContext.createDataFrame(Seq(parameters)).write.parquet(path + "/vectors")
+      sqlContext.createDataFrame(Seq(vectors)).write.parquet(path + "/vectors")
     }
   }
 }
@@ -131,16 +130,14 @@ object LinearRegressionModel extends MLReadable[LinearRegressionModel] {
 
       val vectors = sqlContext.read.parquet(path + "/vectors")
 
+      // Used to convert untyped dataframes to datasets with vectors
       implicit val encoder: Encoder[Vector] = ExpressionEncoder()
 
       val weights = vectors.select(vectors("_1").as[Vector]).first()
-      val bias = vectors.select(vectors("_2").as[Vector])
-        .first()(0)
+      val bias = vectors.select(vectors("_2").as[Vector]).first()(0)
 
       val model = new LinearRegressionModel(weights.toDense, bias)
-
       metadata.getAndSetParams(model)
-
       model
     }
   }
